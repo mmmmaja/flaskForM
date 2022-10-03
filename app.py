@@ -26,6 +26,11 @@ def pizza_page():
     return render_template('pizza_page.html', pizzas=pizzas)
 
 
+@app.route('/new_customer')
+def new_customer():
+    return render_template('new_customer.html')
+
+
 @app.route('/', methods=("GET", "POST"))
 def login():
 
