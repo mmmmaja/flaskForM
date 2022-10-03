@@ -148,6 +148,11 @@ postal_codes = [
     PostalCode(code="654"),
 ]
 
+
+deliverers = [
+    Deliverer(phone_number="123456", postal_code_id=0, occupied=False)
+]
+
 for ingredient in ingredients:
     db.session.add(ingredient)
 for drink in drinks:
@@ -156,6 +161,8 @@ for dessert in desserts:
     db.session.add(dessert)
 for postal_code in postal_codes:
     db.session.add(postal_code)
+for deliverer in deliverers:
+    db.session.add(deliverer)
 
 db.session.commit()
 
