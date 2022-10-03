@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block title %}Customer{% endblock %}
+
+{% block content %}
+    <form action="#" method="POST">
+        <p><label>
+            <input type="username" name="username" placeholder="Enter username" value="{{ username if username }}" />
+            <input type="phone_number" name="phone_number" placeholder="Enter phone number" value="{{ phone_number if phone_number }}" />
+            <input type="submit" value="submit" />
+        </label></p>
+    </form>
+{% endblock %}
