@@ -9,7 +9,7 @@ app = Flask(__name__)
 
 app.config['MYSQL_HOST'] = 'localhost'
 app.config['MYSQL_USER'] = 'root'
-app.config['MYSQL_PASSWORD'] = 'Sybirek123'
+app.config['MYSQL_PASSWORD'] = 'hazelnoot2022'
 app.config['MYSQL_DB'] = 'flask'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
@@ -126,7 +126,7 @@ def create_pizza(ingredients, name):
     db.session.commit()
 
 
-create_pizza([mozzarella], "margaritta")
+create_pizza([mozzarella], "margherita")
 
 
 @app.route('/')
