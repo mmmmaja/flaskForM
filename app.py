@@ -9,7 +9,7 @@ app = Flask(__name__)
 
 app.config['MYSQL_HOST'] = 'localhost'
 app.config['MYSQL_USER'] = 'root'
-app.config['MYSQL_PASSWORD'] = 'hazelnoot2022'
+app.config['MYSQL_PASSWORD'] = 'Sybirek123'
 app.config['MYSQL_DB'] = 'flask'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
@@ -50,6 +50,7 @@ class PostalCode(db.Model):
 class Customer(db.Model):
     customer_id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(100), nullable=False)
+    password = db.Column(db.String(100), nullable=False)
     phone_number = db.Column(db.String(100), nullable=False)
     postal_code_id = db.Column(db.Integer, db.ForeignKey('postal_code.postal_code_id'), nullable=False)
 
@@ -126,7 +127,7 @@ def create_pizza(ingredients, name):
     db.session.commit()
 
 
-create_pizza([mozzarella], "margherita")
+create_pizza([mozzarella], "margaritta")
 
 
 @app.route('/')
@@ -144,6 +145,11 @@ def pizza_page():
 @app.route('/customer', methods=("GET", "POST"))
 def customer_page():
     return render_template('customer.html')
+
+
+@app.route('/login', methods=("GET", "POST"))
+def login():
+    return render_template('login.html')
 
 
 if __name__ == '__main__':
