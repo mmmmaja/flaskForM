@@ -4,16 +4,22 @@
     <meta charset="UTF-8">
     <title>Login Page</title>
     <style>
+        body {
+            background-color: #F1FFE7;
+        }
         .title {
-            color: #424B54;
+            color: #1A1B41;
+            font-family: "Times New Roman", Times, serif;
+            font-size: 2em;
         }
         .container-fluid {
             flex: 20%;
-            padding: 10px;
+            padding: 40px;
             margin: 5px;
-            background-color: #93A8AC;
+            background-color: #C2E7DA;
             inline-size: 100%;
         }
+
     </style>
 </head>
 <body>
@@ -21,11 +27,15 @@
 
     <div class="container-fluid">
            <form action="#" method="POST">
-            <p><label>
-                <input type="username" name="username" placeholder="Enter username" value="{{ username if username }}" />
-                <input type="password" name="password" placeholder="Enter password" value="{{ password if password }}" />
-                <input type="submit" value="submit" />
-            </label></p>
+               <div class="input">
+                   <label for="username"><strong>Username</strong></label>
+                   <input type="text" placeholder="Enter Username" name="username" required> <br />
+
+                   <label for="password"><strong>Password</strong></label>
+                   <input type="password" placeholder="Enter Password" name="password" required> <br />
+
+                   <input type="submit" value="submit" />
+               </div>
            </form>
 
 

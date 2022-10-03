@@ -1,11 +1,16 @@
 import os
+from datetime import timedelta
+
 from flask import Flask, render_template, request, url_for, redirect
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.sql import func
 
+
 basedir = os.path.abspath(os.path.dirname(__file__))
 
 app = Flask(__name__)
+app.permanent_session_lifetime = timedelta(minutes=5)
+
 
 app.config['MYSQL_HOST'] = 'localhost'
 app.config['MYSQL_USER'] = 'root'
@@ -149,7 +154,25 @@ def customer_page():
 
 @app.route('/login', methods=("GET", "POST"))
 def login():
-    return render_template('login.html')
+
+    if request.method == "POST":
+        db.session.permanent = True
+        print(request.form["username"])
+    #
+    #     customer = get_customer(request.form["username"], request.form["password"])
+    #     if customer is None:
+    #         # Failed to log in
+    #         return render_template("login.html")
+    #     else:
+    #         # Logged in, proceed to order page
+    #         db.session["current_user"] = customer
+    #         return redirect(url_for("pizza_page"))
+    # else:
+    #     if "current_user" in db.session:
+    #         # Already logged in!
+    #         return redirect(url_for("pizza_page"))
+    #     else:
+    return render_template("login.html")
 
 
 if __name__ == '__main__':
@@ -167,3 +190,12 @@ def get_ingredients(pizza_id):
         for ingredient in ingredients:
             ingredient_array.append(ingredient)
     return ingredient_array
+
+
+def get_customer(username, password):
+    for instance in db.session.query(Customer).where(
+            Customer.username == username
+    ):
+        if instance.password == password:
+            return instance
+    return None
