@@ -26,7 +26,7 @@ def pizza_page():
     return render_template('pizza_page.html', pizzas=pizzas)
 
 
-@app.route('/new_customer')
+@app.route('/new_customer', methods=['GET', 'POST'])
 def new_customer():
     return render_template('new_customer.html')
 
