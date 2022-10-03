@@ -10,10 +10,13 @@ from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.sql import func
 
 
-@app.route('/')
-def index():
-    ingredients = Ingredient.query.all()
-    return render_template('index.html', students=ingredients)
+def get_customer(username, password):
+    for instance in db.session.query(Customer).where(
+            Customer.username == username
+    ):
+        if instance.password == password:
+            return instance
+    return None
 
 
 @app.route('/pizza')
@@ -23,12 +26,7 @@ def pizza_page():
     return render_template('pizza_page.html', pizzas=pizzas)
 
 
-@app.route('/customer', methods=("GET", "POST"))
-def customer_page():
-    return render_template('customer.html')
-
-
-@app.route('/login', methods=("GET", "POST"))
+@app.route('/', methods=("GET", "POST"))
 def login():
 
     if request.method == "POST":
@@ -50,12 +48,3 @@ def login():
 
 if __name__ == '__main__':
     app.run(debug=True)
-
-
-def get_customer(username, password):
-    for instance in db.session.query(Customer).where(
-            Customer.username == username
-    ):
-        if instance.password == password:
-            return instance
-    return None
