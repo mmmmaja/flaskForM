@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Finalize Order</title>
+    <style>
+        input {
+            padding:0.3em 1.4em;
+            margin:0 0.8em 0.8em 0;
+            border-radius:2em;
+            border-color: #3da9fc;
+            color: #094067;
+            background-image: -webkit-linear-gradient(45deg, #3da9fc 50%, transparent 50%);
+            background-image: linear-gradient(45deg, #3da9fc 50%, transparent 50%);
+            background-position: 100%;
+            background-size: 400%;
+            -webkit-transition: background 300ms ease-in-out;
+            transition: background 300ms ease-in-out;
+
+            position: center;
+            text-align: center;
+            flex-wrap: nowrap;
+        }
+
+        input:hover {
+            background-position: 0;
+        }
+    </style>
+</head>
+<body>
+
+    <form method="post" action="/finalize">
+        <input type="submit" name="cancel" value="Cancel Order">
+    </form>
+
+</body>
+</html>

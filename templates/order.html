@@ -22,15 +22,30 @@
         }
 
         .pizza {
-
             padding: 10px;
             margin: 5px;
-            background-color: #90b4ce;
+            background-color: #a0dafd;
             inline-size: 100%;
             width:300px;
         }
 
-        .pizza_name {
+        .drink {
+            padding: 10px;
+            margin: 5px;
+            background-color: #d2c5ee;
+            inline-size: 100%;
+            width:300px;
+        }
+
+        .dessert {
+            padding: 10px;
+            margin: 5px;
+            background-color: #b2e1c0;
+            inline-size: 100%;
+            width:300px;
+        }
+
+        .product_name {
             font-size: 2em;
             color: #094067;
         }
@@ -63,7 +78,7 @@
           background-position: 0;
         }
 
-        .finalize_button {
+        .button {
             position: fixed;
             text-align: left;
             flex-wrap: nowrap;
@@ -74,24 +89,21 @@
 
 <body >
 
-    <div class="finalize_button">
-        <form method="post" action="/order">
-            <input type="submit" name=finalize_button" value="Finalize Order">
+    <div class="button">
+        <form method="post" action="/order_details">
+            <input type="submit" name="proceed" value="Proceed to Order">
         </form>
     </div>
 
     <br><h1>Pizzas</h1>
 
     <div class="content">
-    {% for i in range(pizza_number) %}
+    {% for i in range(ranges[0]) %}
         <div class="pizza">
 
-            <div class = "pizza_name">
-                <strong>{{ pizzas[i].name }}</strong>
-            </div>
-
-            <p color="#01447c">Vegetarian: {{ pizzas[i].vegetarian }}</p>
-            <p color="#01447c">Price: {{ pizzas[i].price }} euro</p>
+            <strong class = "product_name">{{ products[0][i].name }}</strong>
+            <p>Vegetarian: {{ products[0][i].vegetarian }}</p>
+            <p>Price: {{ products[0][i].price }} euro</p>
 
             <div class="ingredients">
                 <b>Ingredients:</b>
@@ -99,12 +111,42 @@
                     <p>{{ ingredient.name }}</p>
                 {% endfor %}
             </div>
-        <br>
-        <form method="post" action="/order">
-            <input type="submit" name="pizza_{{ pizzas[i].pizza_id}}" value="Add to basket">
-        </form>
+
+            <br><form method="post" action="/order">
+                <input type="submit" name="pizza_{{ products[0][i].pizza_id}}" value="Add to basket">
+            </form>
         </div>
     {% endfor %}
-</div>
+    </div>
+
+    <br><h1>Drinks</h1>
+    <div class="content">
+    {% for i in range(ranges[1]) %}
+        <div class="drink">
+
+            <strong class = "product_name">{{ products[1][i].name }}</strong>
+            <p>Price: {{ products[1][i].price }} euro</p>
+
+            <br><form method="post" action="/order">
+                <input type="submit" name="drink_{{ products[1][i].drink_id}}" value="Add to basket">
+            </form>
+        </div>
+    {% endfor %}
+    </div>
+
+    <br><h1>Desserts</h1>
+    <div class="content">
+    {% for i in range(ranges[2]) %}
+        <div class="dessert">
+
+            <strong class = "product_name">{{ products[2][i].name }}</strong>
+            <p>Price: {{ products[2][i].price }} euro</p>
+
+            <br><form method="post" action="/order">
+                <input type="submit" name="dessert_{{ products[2][i].dessert_id}}" value="Add to basket">
+            </form>
+        </div>
+    {% endfor %}
+    </div>
 </body>
 </html>
