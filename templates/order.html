@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Pizza Page</title>
+
+    <style>
+        body {
+            background-color: #fffffe;
+            text-align: center;
+        }
+        .content {
+            display: flex;
+            flex-direction: row;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        h1 {
+            color: #094067;
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .pizza {
+
+            padding: 10px;
+            margin: 5px;
+            background-color: #90b4ce;
+            inline-size: 100%;
+            width:300px;
+        }
+
+        .pizza_name {
+            font-size: 2em;
+            color: #094067;
+        }
+
+        .ingredients {
+            display: inline-block;
+            overflow-x: auto;
+            width: 50%;
+            color: #0879d3;
+            margin-top: 10px;
+            line-height: 0.7;
+            font-size: small;
+        }
+
+        input {
+            padding:0.3em 1.2em;
+            margin:0 0.3em 0.3em 0;
+            border-radius:2em;
+            border-color: #3da9fc;
+            color: #094067;
+            background-image: -webkit-linear-gradient(45deg, #3da9fc 50%, transparent 50%);
+            background-image: linear-gradient(45deg, #3da9fc 50%, transparent 50%);
+            background-position: 100%;
+            background-size: 400%;
+            -webkit-transition: background 300ms ease-in-out;
+            transition: background 300ms ease-in-out;
+        }
+
+        input:hover {
+          background-position: 0;
+        }
+
+        .finalize_button {
+            position: fixed;
+            text-align: left;
+            flex-wrap: nowrap;
+        }
+
+    </style>
+</head>
+
+<body >
+
+    <div class="finalize_button">
+        <form method="post" action="/order">
+            <input type="submit" name=finalize_button" value="Finalize Order">
+        </form>
+    </div>
+
+    <br><h1>Pizzas</h1>
+
+    <div class="content">
+    {% for i in range(pizza_number) %}
+        <div class="pizza">
+
+            <div class = "pizza_name">
+                <strong>{{ pizzas[i].name }}</strong>
+            </div>
+
+            <p color="#01447c">Vegetarian: {{ pizzas[i].vegetarian }}</p>
+            <p color="#01447c">Price: {{ pizzas[i].price }} euro</p>
+
+            <div class="ingredients">
+                <b>Ingredients:</b>
+                {% for ingredient in ingredients[i] %}
+                    <p>{{ ingredient.name }}</p>
+                {% endfor %}
+            </div>
+        <br>
+        <form method="post" action="/order">
+            <input type="submit" name="pizza_{{ pizzas[i].pizza_id}}" value="Add to basket">
+        </form>
+        </div>
+    {% endfor %}
+</div>
+</body>
+</html>

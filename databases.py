@@ -1,4 +1,7 @@
+import time
+
 from base import db
+import werkzeug
 
 
 
@@ -100,11 +103,11 @@ def create_pizza(name, ingredient_list):
     price = 0
 
     for i in ingredient_list:
-        db.session.add(PizzaIngredient(pizza_id=pizza.pizza_id, ingredient_id=ingredient.ingredient_id))
+        db.session.add(PizzaIngredient(pizza_id=pizza.pizza_id, ingredient_id=i.ingredient_id))
         price += i.price
         if not i.vegetarian:
             vegetarian = False
-    pizza.price = price * 1.09 * 1.4
+    pizza.price = round(price * 1.09 * 1.4, 2)
     pizza.vegetarian = vegetarian
     db.session.commit()
 
@@ -162,6 +165,15 @@ for postal_code in postal_codes:
 
 db.session.commit()
 
+deliverers = [
+    Deliverer(phone_number="123 456", postal_code_id=postal_codes[0].postal_code_id),
+    Deliverer(phone_number="123 453", postal_code_id=postal_codes[0].postal_code_id)
+]
+
+for deliverer in deliverers:
+    db.session.add(deliverer)
+db.session.commit()
+
 pizzas = [
     create_pizza("margherita", [mozzarella, basil, tomato_sauce]),
     create_pizza("greek", [mozzarella, tomato_sauce, olives, spinach, onions, feta]),
@@ -175,3 +187,98 @@ pizzas = [
     create_pizza("diavolo", [mozzarella, tomato_sauce, basil, pepperoni, onions, olives])
 ]
 
+
+def get_ingredients(pizza_id):
+    ingredient_list = []
+    for instance in db.session.query(PizzaIngredient).where(
+            PizzaIngredient.pizza_id == pizza_id
+    ):
+        for i in db.session.query(Ingredient).where(
+             Ingredient.ingredient_id == instance.ingredient_id
+        ):
+            ingredient_list.append(i)
+    return ingredient_list
+
+
+class SessionOrder:
+
+    def __init__(self, customer_id):
+        self.customer_id = customer_id
+        self.order = None
+        self.time = None
+        self.initiate_order()
+
+    def initiate_order(self):
+        _deliverer = self.find_deliverer()
+        if not _deliverer:
+            # no deliverer found at the moment, try to place an order later
+            self.time = time.time()
+            self.cancel_order()
+            print("no deliverer found")
+        else:
+            print("Deliverer found!")
+            self.order = Order(customer_id=self.customer_id, deliverer_id=self.find_deliverer().deliverer_id)
+            db.session.add(self.order)
+            db.session.commit()
+
+    def add_pizza(self, pizza_id):
+        db.session.add(PizzaOrder(pizza_id=pizza_id, order_id=self.order.order_id))
+        db.session.commit()
+
+    def add_drink(self, drink_id):
+        db.session.add(DrinkOrder(drink_id=drink_id, order_id=self.order.order_id))
+        db.session.commit()
+
+    def add_dessert(self, dessert_id):
+        db.session.add(DessertOrder(dessert_id=dessert_id, order_id=self.order.order_id))
+        db.session.commit()
+
+    def finalize_order(self):
+        # Check number of pizzas
+        if len(db.session.query(PizzaOrder).where(PizzaOrder.order_id == self.order.order_id)) < 1:
+            return False
+
+        self.time = time.time()
+        return True
+
+    def cancel_order(self):
+        cancel_time = time.time()
+        minutes_elapsed = (cancel_time - self.time) / 60
+        if minutes_elapsed > 10:
+            # Time to cancel the order has passed
+            return False
+        return True
+
+    def detect_order_action(self, post_request):
+        for instance in db.session.query(Pizza):
+            try:
+                if post_request.form["pizza_" + str(instance.pizza_id)] == "Add to basket":
+                    self.add_pizza(instance.pizza_id)
+            except werkzeug.exceptions.BadRequestKeyError:
+                pass
+
+        for instance in db.session.query(Drink):
+            try:
+                if post_request.form["drink_" + str(instance.drink_id)] == "Add to basket":
+                    self.add_drink(instance.drink_id)
+            except werkzeug.exceptions.BadRequestKeyError:
+                pass
+
+        for instance in db.session.query(Dessert):
+            try:
+                if post_request.form["dessert_" + str(instance.dessert_id)] == "Add to basket":
+                    self.add_dessert(instance.dessert_id)
+            except werkzeug.exceptions.BadRequestKeyError:
+                pass
+
+    def find_deliverer(self):
+        customer = db.session.query(Customer)\
+            .where(Customer.customer_id == self.customer_id)[0]
+        for _deliverer in db.session.query(Deliverer)\
+                .where(Deliverer.postal_code_id == customer.postal_code_id):
+            if not _deliverer.occupied:
+                return _deliverer
+        return None
+
+
+ORDER = None
