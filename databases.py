@@ -1,8 +1,4 @@
-import time
-
 from base import db
-import werkzeug
-
 
 
 class Ingredient(db.Model):
@@ -38,13 +34,13 @@ class PostalCode(db.Model):
 
 class Customer(db.Model):
     customer_id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(100), unique = True, nullable=False)
+    username = db.Column(db.String(100), unique=True, nullable=False)
     password = db.Column(db.String(100), nullable=False)
     phone_number = db.Column(db.String(100), nullable=False)
     postal_code_id = db.Column(db.Integer, db.ForeignKey('postal_code.postal_code_id'), nullable=False)
 
-    point_number = db.Column(db.Integer)
-    used_discount = db.Column(db.Boolean)
+    point_number = db.Column(db.Integer, default=0)
+    discount_used = db.Column(db.Boolean, default=False)
 
 
 class Deliverer(db.Model):
@@ -95,20 +91,20 @@ db.create_all()
 
 
 def create_pizza(name, ingredient_list):
-    pizza = Pizza(name=name)
-    db.session.add(pizza)
+    _pizza = Pizza(name=name)
+    db.session.add(_pizza)
     db.session.commit()
 
     vegetarian = True
     price = 0
 
     for i in ingredient_list:
-        db.session.add(PizzaIngredient(pizza_id=pizza.pizza_id, ingredient_id=i.ingredient_id))
+        db.session.add(PizzaIngredient(pizza_id=_pizza.pizza_id, ingredient_id=i.ingredient_id))
         price += i.price
         if not i.vegetarian:
             vegetarian = False
-    pizza.price = round(price * 1.09 * 1.4, 2)
-    pizza.vegetarian = vegetarian
+    _pizza.price = round(price * 1.09 * 1.4, 2)
+    _pizza.vegetarian = vegetarian
     db.session.commit()
 
 
@@ -161,13 +157,14 @@ for dessert in desserts:
     db.session.add(dessert)
 for postal_code in postal_codes:
     db.session.add(postal_code)
-
-
 db.session.commit()
 
 deliverers = [
-    Deliverer(phone_number="123 456", postal_code_id=postal_codes[0].postal_code_id),
-    Deliverer(phone_number="123 453", postal_code_id=postal_codes[0].postal_code_id)
+    Deliverer(phone_number="1231456", postal_code_id=postal_codes[0].postal_code_id),
+    Deliverer(phone_number="123DS53", postal_code_id=postal_codes[0].postal_code_id),
+    Deliverer(phone_number="838385", postal_code_id=postal_codes[1].postal_code_id),
+    Deliverer(phone_number="123553", postal_code_id=postal_codes[1].postal_code_id),
+    Deliverer(phone_number="3363453", postal_code_id=postal_codes[2].postal_code_id)
 ]
 
 for deliverer in deliverers:
@@ -187,6 +184,16 @@ pizzas = [
     create_pizza("diavolo", [mozzarella, tomato_sauce, basil, pepperoni, onions, olives])
 ]
 
+customers = [
+    Customer(username="maja", password="Sybirek", phone_number="123", postal_code_id=postal_codes[0].postal_code_id),
+    Customer(username="random", password="random", phone_number="456", postal_code_id=postal_codes[1].postal_code_id),
+    Customer(username="pizzaLover", password="pizzaLover123", phone_number="789", postal_code_id=postal_codes[2].postal_code_id),
+    Customer(username="x", password="x", phone_number="098765", postal_code_id=postal_codes[1].postal_code_id),
+]
+for customer in customers:
+    db.session.add(customer)
+db.session.commit()
+
 
 def get_ingredients(pizza_id):
     ingredient_list = []
@@ -200,85 +207,17 @@ def get_ingredients(pizza_id):
     return ingredient_list
 
 
-class SessionOrder:
-
-    def __init__(self, customer_id):
-        self.customer_id = customer_id
-        self.order = None
-        self.time = None
-        self.initiate_order()
-
-    def initiate_order(self):
-        _deliverer = self.find_deliverer()
-        if not _deliverer:
-            # no deliverer found at the moment, try to place an order later
-            self.time = time.time()
-            self.cancel_order()
-            print("no deliverer found")
-        else:
-            print("Deliverer found!")
-            self.order = Order(customer_id=self.customer_id, deliverer_id=self.find_deliverer().deliverer_id)
-            db.session.add(self.order)
-            db.session.commit()
-
-    def add_pizza(self, pizza_id):
-        db.session.add(PizzaOrder(pizza_id=pizza_id, order_id=self.order.order_id))
-        db.session.commit()
-
-    def add_drink(self, drink_id):
-        db.session.add(DrinkOrder(drink_id=drink_id, order_id=self.order.order_id))
-        db.session.commit()
-
-    def add_dessert(self, dessert_id):
-        db.session.add(DessertOrder(dessert_id=dessert_id, order_id=self.order.order_id))
-        db.session.commit()
-
-    def finalize_order(self):
-        # Check number of pizzas
-        if len(db.session.query(PizzaOrder).where(PizzaOrder.order_id == self.order.order_id)) < 1:
-            return False
-
-        self.time = time.time()
-        return True
-
-    def cancel_order(self):
-        cancel_time = time.time()
-        minutes_elapsed = (cancel_time - self.time) / 60
-        if minutes_elapsed > 10:
-            # Time to cancel the order has passed
-            return False
-        return True
-
-    def detect_order_action(self, post_request):
-        for instance in db.session.query(Pizza):
-            try:
-                if post_request.form["pizza_" + str(instance.pizza_id)] == "Add to basket":
-                    self.add_pizza(instance.pizza_id)
-            except werkzeug.exceptions.BadRequestKeyError:
-                pass
-
-        for instance in db.session.query(Drink):
-            try:
-                if post_request.form["drink_" + str(instance.drink_id)] == "Add to basket":
-                    self.add_drink(instance.drink_id)
-            except werkzeug.exceptions.BadRequestKeyError:
-                pass
-
-        for instance in db.session.query(Dessert):
-            try:
-                if post_request.form["dessert_" + str(instance.dessert_id)] == "Add to basket":
-                    self.add_dessert(instance.dessert_id)
-            except werkzeug.exceptions.BadRequestKeyError:
-                pass
-
-    def find_deliverer(self):
-        customer = db.session.query(Customer)\
-            .where(Customer.customer_id == self.customer_id)[0]
-        for _deliverer in db.session.query(Deliverer)\
-                .where(Deliverer.postal_code_id == customer.postal_code_id):
-            if not _deliverer.occupied:
-                return _deliverer
-        return None
+def get_customer_ID(username, password):
+    for instance in db.session.query(Customer).where(
+            Customer.username == username
+    ):
+        if instance.password == password:
+            return instance.customer_id
+    return None
 
 
-ORDER = None
+all_pizzas = Pizza.query.all()
+all_ingredients = []
+for pizza in all_pizzas:
+    all_ingredients.append(get_ingredients(pizza.pizza_id))
+

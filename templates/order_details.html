@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Order Details</title>
+
+    <style>
+        body {
+            background-color: #fffffe;
+            text-align: center;
+        }
+
+        h1 {
+            color: #094067;
+            text-align: center;
+        }
+
+        strong {
+            color: #008dff;
+            font-size: 1.3em;
+        }
+
+        p {
+            color: #0879d3;
+            font-size: 1.2em;
+        }
+
+        input {
+            padding:0.3em 1.2em;
+            margin:0 0.3em 0.3em 0;
+            border-radius:2em;
+            border-color: #3da9fc;
+            color: #094067;
+            background-image: -webkit-linear-gradient(45deg, #3da9fc 50%, transparent 50%);
+            background-image: linear-gradient(45deg, #3da9fc 50%, transparent 50%);
+            background-position: 100%;
+            background-size: 400%;
+            -webkit-transition: background 300ms ease-in-out;
+            transition: background 300ms ease-in-out;
+        }
+
+        input:hover {
+          background-position: 0;
+        }
+
+        .continue_ordering_button {
+            margin: 20px;
+            position: fixed;
+            text-align: left;
+            flex-wrap: nowrap;
+        }
+
+        .price {
+            color: #008dff;
+            font-size: 1.4em;
+            padding-bottom: 20px;
+        }
+
+        .content {
+            background-color: #a0dafd;
+            padding: 30px;
+            border: 3px solid #3da9fc;
+            margin-bottom: 40px;
+        }
+
+
+    </style>
+</head>
+
+<body >
+
+    <div class="continue_ordering_button">
+        <form method="post" action="/order">
+            <input type="submit" name=back" value="Back to order">
+        </form>
+    </div>
+
+    <br><h1>Order Details</h1>
+
+    <div class="content">
+
+    <div class="price">
+        <br><p>Order price: {{ price }} euro</p>
+    </div>
+
+    <br><strong> Pizzas ordered: </strong>
+    {% for pizza in products[0] %}
+        <p>{{ pizza }}</p>
+    {% endfor %}
+
+    <br><strong> Desserts ordered: </strong>
+    {% for dessert in products[1] %}
+        <p>{{ dessert }}</p>
+    {% endfor %}
+
+    <br><strong> Drinks ordered: </strong>
+    {% for drink in products[2] %}
+        <p>{{ drink }}</p>
+    {% endfor %}
+    </div>
+</body>
+</html>
