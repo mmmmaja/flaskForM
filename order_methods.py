@@ -1,8 +1,8 @@
 import datetime
-
-from databases import Pizza, Customer, Deliverer, Order, PizzaIngredient, PizzaOrder, Drink, DrinkOrder, DessertOrder, Dessert
+from databases import Pizza, Customer, Deliverer, Order, PizzaOrder, Drink, DrinkOrder, DessertOrder, Dessert
 import werkzeug
-from base import app, db
+from base import db
+from sqlalchemy import delete
 
 
 def detect_action(_request, ORDER_ID):
@@ -48,18 +48,27 @@ def find_deliverer(customer_id):
 
 
 def finalize_order(ORDER_ID):
-
-    pizza_number = len(db.session.query(PizzaOrder).where(PizzaOrder.order_id == ORDER_ID))
-    if pizza_number < 1:
-        return False
-
     order = db.session.query(Order).where(Order.order_id == ORDER_ID)[0]
-    customer_id = order.customer_id
-    customer = db.session.query(Customer).where(Customer.customer_id == customer_id)[0]
-    customer.point_number += pizza_number
+    if not order.finalized:
+        customer_id = order.customer_id
+        customer = db.session.query(Customer).where(Customer.customer_id == customer_id)[0]
+        for _ in db.session.query(PizzaOrder).where(PizzaOrder.order_id == ORDER_ID):
+            customer.point_number += 1
 
-    order.order_time = datetime.datetime.now()
-    return True
+        order.order_time = datetime.datetime.now()
+        deliverer = db.session.query(Deliverer).where(Deliverer.deliverer_id == order.order_id)[0]
+        deliverer.occupy()
+        order.finalized = True
+
+        delivery_time = datetime.datetime.now() + datetime.timedelta(seconds=60*40)
+        hour = str(delivery_time.time().hour)
+        if len(hour) == 1:
+            hour = "0" + hour
+        minute = str(delivery_time.time().minute)
+        if len(minute) == 1:
+            minute = "0" + minute
+        return hour + ":" + minute
+    return None
 
 
 def get_order_details(ORDER_ID):
@@ -89,3 +98,13 @@ def get_order_details(ORDER_ID):
     valid = len(products[0]) > 0
 
     return products, price, valid, discount_available
+
+
+def cancel_order(ORDER_ID):
+    order = db.session.query(Order).where(Order.order_id == ORDER_ID)[0]
+    time_elapsed = (datetime.datetime.now() - order.order_time).total_seconds() / 60
+    print(time_elapsed)
+    if time_elapsed > 1:
+        delete(order)
+        return True
+    return False

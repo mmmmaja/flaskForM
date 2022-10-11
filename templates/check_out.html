@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Finalize Order</title>
+    <title>Check Out</title>
     <style>
         input {
             padding:0.3em 1.4em;
@@ -25,13 +25,22 @@
         input:hover {
             background-position: 0;
         }
+
+        p{
+            color: #0879d3;
+            font-size: 1.2em;
+        }
     </style>
 </head>
 <body>
 
-    <form method="post" action="/finalize">
+    <form method="post" action="/check_out">
         <input type="submit" name="cancel" value="Cancel Order">
     </form>
 
+    <p>Estimated delivery time: {{ time }}</p>
+    {% if error == True %}
+    <p>Sorry, time for cancelling your order has passed</p>
+    {% endif %}
 </body>
 </html>

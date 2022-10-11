@@ -1,18 +1,17 @@
+import datetime
+
 import werkzeug
 from flask import request, render_template, redirect, url_for
 from base import app, db
-from databases import Pizza, all_ingredients, Order, get_customer_ID, all_products
-from order_methods import detect_action
-from order_methods import find_deliverer, get_order_details
+from databases import all_ingredients, Order, get_customer_ID, all_products
+from order_methods import detect_action, cancel_order
+from order_methods import find_deliverer, get_order_details, finalize_order
 
-# TODO
-# figure out how to store current user in session -> loginManager(?)
 ORDER_ID = None
 
 
 @app.route('/order_details', methods=("GET", "POST"))
 def order_details():
-
     return render_template(
         "order_details.html",
         products=get_order_details(ORDER_ID)[0],
@@ -22,13 +21,26 @@ def order_details():
     )
 
 
-@app.route('/finalize', methods=("GET", "POST"))
-def finalize():
-    name1 = request.form.get('discount')
-    print(name1)
-    value = request.form.getlist('discount')
-    print(value)
-    return render_template("finalize_order.html")
+@app.route('/check_out', methods=("GET", "POST"))
+def check_out():
+    delivery_time, error = finalize_order(ORDER_ID), False
+    if request.method == 'POST':
+        try:
+            if request.form["cancel"] == "Cancel Order":
+                # check if it's still possible to cancel the order
+                if cancel_order(ORDER_ID):
+                    return redirect(url_for('login'))
+                else:
+                    print("Unable to cancel order")
+                    # Time has passed, unable to cancel order
+                    error = True
+        except werkzeug.exceptions.BadRequestKeyError:
+            pass
+    return render_template(
+        'check_out.html',
+        time=delivery_time,
+        error=error
+    )
 
 
 @app.route('/order', methods=("GET", "POST"))
@@ -49,10 +61,7 @@ def login():
     global ORDER_ID
 
     if request.method == "POST":
-        name1 = request.form.get('discount')
-        print(name1)
-        value = request.form.getlist('discount')
-        print(value)
+
         # Find if customer with given login is in the database
         customer_id = get_customer_ID(request.form["username"], request.form["password"])
         if customer_id is None:
