@@ -2,7 +2,6 @@ import datetime
 from databases import Pizza, Customer, Deliverer, Order, PizzaOrder, Drink, DrinkOrder, DessertOrder, Dessert
 import werkzeug
 from base import db
-from sqlalchemy import delete
 
 
 def detect_action(_request, ORDER_ID):
@@ -49,7 +48,7 @@ def find_deliverer(customer_id):
 
 def finalize_order(ORDER_ID):
     order = db.session.query(Order).where(Order.order_id == ORDER_ID)[0]
-    if not order.finalized:
+    if order.order_time is None:
         customer_id = order.customer_id
         customer = db.session.query(Customer).where(Customer.customer_id == customer_id)[0]
         for _ in db.session.query(PizzaOrder).where(PizzaOrder.order_id == ORDER_ID):
@@ -58,53 +57,16 @@ def finalize_order(ORDER_ID):
         order.order_time = datetime.datetime.now()
         deliverer = db.session.query(Deliverer).where(Deliverer.deliverer_id == order.order_id)[0]
         deliverer.occupy()
-        order.finalized = True
+        db.session.commit()
 
-        delivery_time = datetime.datetime.now() + datetime.timedelta(seconds=60*40)
-        hour = str(delivery_time.time().hour)
-        if len(hour) == 1:
-            hour = "0" + hour
-        minute = str(delivery_time.time().minute)
-        if len(minute) == 1:
-            minute = "0" + minute
-        return hour + ":" + minute
-    return None
-
-
-def get_order_details(ORDER_ID):
-    price, products, valid, discount_available = 0, [[], [], []], False, False
-
-    # collect price and products
-    for pizza_order in db.session.query(PizzaOrder).where(PizzaOrder.order_id == ORDER_ID):
-        pizza = db.session.query(Pizza).where(Pizza.pizza_id == pizza_order.pizza_id)[0]
-        price += pizza.price
-        products[0].append(pizza.name)
-    for drink_order in db.session.query(DrinkOrder).where(DrinkOrder.order_id == ORDER_ID):
-        drink = db.session.query(Drink).where(Drink.drink_id == drink_order.drink_id)[0]
-        products[1].append(drink.name)
-        price += drink.price
-    for dessert_order in db.session.query(DessertOrder).where(DessertOrder.order_id == ORDER_ID):
-        dessert = db.session.query(Dessert).where(Dessert.dessert_id == dessert_order.dessert_id)[0]
-        products[2].append(dessert.name)
-        price += dessert.price
-    price = round(price, 2)
-
-    # Check if discount is possible
-    order = db.session.query(Order).where(Order.order_id == ORDER_ID)[0]
-    customer_id = order.customer_id
-    customer = db.session.query(Customer).where(Customer.customer_id == customer_id)[0]
-    if customer.point_number > 10 and not customer.discount_used:
-        discount_available = True
-    valid = len(products[0]) > 0
-
-    return products, price, valid, discount_available
+    return order.order_time
 
 
 def cancel_order(ORDER_ID):
     order = db.session.query(Order).where(Order.order_id == ORDER_ID)[0]
     time_elapsed = (datetime.datetime.now() - order.order_time).total_seconds() / 60
-    print(time_elapsed)
-    if time_elapsed > 1:
-        delete(order)
-        return True
-    return False
+    if time_elapsed > 5:
+        return False
+    db.session.delete(order)
+    db.session.commit()
+    return True

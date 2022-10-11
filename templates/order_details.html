@@ -77,12 +77,6 @@
             flex-wrap: nowrap;
         }
 
-        .discount_text {
-            color: #008dff;
-            line-height: 2.0em;
-            font-size: 1.1em;
-        }
-
     </style>
 </head>
 
@@ -125,9 +119,9 @@
 
         {% if discount == True %}
             <b>You have possibility to use the discount code for this order!</b>
-            <br><b>Price after discount: {{ price * 0.9 }} euro</b>
-            <br><input type="checkbox" name="discount" value="checked">
-            <label class = "discount_text" for="discount">Use discount code</label><br>
+            <form method="post" action="/order_details">
+            <input type="submit" name="discount" value="Use discount code">
+        </form>
         {% endif %}
 
         <div class="submit_button">

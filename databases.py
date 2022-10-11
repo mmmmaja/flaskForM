@@ -67,7 +67,44 @@ class Order(db.Model):
     deliverer_id = db.Column(db.Integer, db.ForeignKey('deliverer.deliverer_id'), nullable=False)
     order_time = db.Column(db.DateTime)
 
-    finalized = False
+    price = 0
+    products = [[], [], []]
+    valid = False
+    discount_available = False
+
+    def use_discount_code(self):
+        customer_id = self.customer_id
+        _customer = db.session.query(Customer).where(Customer.customer_id == customer_id)[0]
+        _customer.discount_used = True
+        self.price = self.price * 0.9
+        db.session.commit()
+
+    def order_details(self):
+
+        if self.price != 0:
+            return
+
+        # collect price and products
+        for pizza_order in db.session.query(PizzaOrder).where(PizzaOrder.order_id == self.order_id):
+            _pizza = db.session.query(Pizza).where(Pizza.pizza_id == pizza_order.pizza_id)[0]
+            self.price += _pizza.price
+            self.products[0].append(_pizza.name)
+        for drink_order in db.session.query(DrinkOrder).where(DrinkOrder.order_id == self.order_id):
+            _drink = db.session.query(Drink).where(Drink.drink_id == drink_order.drink_id)[0]
+            self.products[1].append(_drink.name)
+            self.price += _drink.price
+        for dessert_order in db.session.query(DessertOrder).where(DessertOrder.order_id == self.order_id):
+            _dessert = db.session.query(Dessert).where(Dessert.dessert_id == dessert_order.dessert_id)[0]
+            self.products[2].append(_dessert.name)
+            self.price += _dessert.price
+        self.price = round(self.price, 2)
+
+        # Check if discount is possible
+        customer_id = self.customer_id
+        _customer = db.session.query(Customer).where(Customer.customer_id == customer_id)[0]
+        if _customer.point_number > 10 and not _customer.discount_used:
+            self.discount_available = True
+        self.valid = len(self.products[0]) > 0
 
 
 class PizzaIngredient(db.Model):

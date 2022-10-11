@@ -1,29 +1,46 @@
 import datetime
-
 import werkzeug
 from flask import request, render_template, redirect, url_for
 from base import app, db
 from databases import all_ingredients, Order, get_customer_ID, all_products
-from order_methods import detect_action, cancel_order
-from order_methods import find_deliverer, get_order_details, finalize_order
+from order_methods import detect_action, cancel_order, find_deliverer, finalize_order
 
 ORDER_ID = None
 
 
+def convert_time(time):
+    hour = str(time.time().hour)
+    if len(hour) == 1:
+        hour = "0" + hour
+    minute = str(time.time().minute)
+    if len(minute) == 1:
+        minute = "0" + minute
+    return hour + ":" + minute
+
+
 @app.route('/order_details', methods=("GET", "POST"))
 def order_details():
+    _order = db.session.query(Order).where(Order.order_id == ORDER_ID)[0]
+    _order.order_details()
+    if request.method == 'POST':
+        try:
+            if request.form["discount"] == "Use discount code":
+                _order.use_discount_code()
+        except werkzeug.exceptions.BadRequestKeyError:
+            pass
+
     return render_template(
         "order_details.html",
-        products=get_order_details(ORDER_ID)[0],
-        price=get_order_details(ORDER_ID)[1],
-        valid=get_order_details(ORDER_ID)[2],
-        discount=get_order_details(ORDER_ID)[3]
+        products=_order.products,
+        price=_order.price,
+        valid=_order.valid,
+        discount=_order.discount_available
     )
 
 
 @app.route('/check_out', methods=("GET", "POST"))
 def check_out():
-    delivery_time, error = finalize_order(ORDER_ID), False
+    order_time, error = finalize_order(ORDER_ID), False
     if request.method == 'POST':
         try:
             if request.form["cancel"] == "Cancel Order":
@@ -31,21 +48,19 @@ def check_out():
                 if cancel_order(ORDER_ID):
                     return redirect(url_for('login'))
                 else:
-                    print("Unable to cancel order")
                     # Time has passed, unable to cancel order
                     error = True
         except werkzeug.exceptions.BadRequestKeyError:
             pass
     return render_template(
         'check_out.html',
-        time=delivery_time,
+        time=convert_time(order_time + datetime.timedelta(seconds=60*40)),
         error=error
     )
 
 
 @app.route('/order', methods=("GET", "POST"))
 def order():
-
     if request.method == 'POST':
         detect_action(request, ORDER_ID)
     return render_template(
@@ -81,4 +96,6 @@ def login():
 
 if __name__ == '__main__':
     app.run(debug=True)
+
+
 
