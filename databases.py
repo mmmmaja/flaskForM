@@ -73,6 +73,7 @@ class Order(db.Model):
     discount_available = False
 
     def use_discount_code(self):
+        # Lower the current price by when discount code is used
         customer_id = self.customer_id
         _customer = db.session.query(Customer).where(Customer.customer_id == customer_id)[0]
         _customer.discount_used = True
@@ -80,7 +81,7 @@ class Order(db.Model):
         db.session.commit()
 
     def order_details(self):
-
+        # Sets all additional parameters for the order from the queries
         if self.price != 0:
             return
 
@@ -91,11 +92,11 @@ class Order(db.Model):
             self.products[0].append(_pizza.name)
         for drink_order in db.session.query(DrinkOrder).where(DrinkOrder.order_id == self.order_id):
             _drink = db.session.query(Drink).where(Drink.drink_id == drink_order.drink_id)[0]
-            self.products[1].append(_drink.name)
+            self.products[2].append(_drink.name)
             self.price += _drink.price
         for dessert_order in db.session.query(DessertOrder).where(DessertOrder.order_id == self.order_id):
             _dessert = db.session.query(Dessert).where(Dessert.dessert_id == dessert_order.dessert_id)[0]
-            self.products[2].append(_dessert.name)
+            self.products[1].append(_dessert.name)
             self.price += _dessert.price
         self.price = round(self.price, 2)
 
@@ -165,6 +166,7 @@ def create_pizza(name, ingredient_list):
     db.session.commit()
 
 
+# Add ingredients to the session
 mozzarella = Ingredient(name="mozzarella", price=1.2, vegetarian=True)
 basil = Ingredient(name="basil", price=1.2, vegetarian=True)
 olives = Ingredient(name="olives", price=1.8, vegetarian=True)
