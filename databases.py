@@ -85,6 +85,9 @@ class Order(db.Model):
         if self.price != 0:
             return
 
+        self.products = [[], [], []]
+        self.price = 0
+
         # collect price and products
         for pizza_order in db.session.query(PizzaOrder).where(PizzaOrder.order_id == self.order_id):
             _pizza = db.session.query(Pizza).where(Pizza.pizza_id == pizza_order.pizza_id)[0]

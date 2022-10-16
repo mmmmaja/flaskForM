@@ -5,10 +5,15 @@ from base import app, db
 from databases import all_ingredients, Order, get_customer_ID, all_products
 from order_methods import detect_action, cancel_order, find_deliverer, finalize_order
 
+# Global ID of the order in the current session
 ORDER_ID = None
 
 
 def convert_time(time):
+    """
+    :param time: in a datetime format
+    :return: time converted into string
+    """
     hour = str(time.time().hour)
     if len(hour) == 1:
         hour = "0" + hour
@@ -74,6 +79,8 @@ def order():
 @app.route('/', methods=("GET", "POST"))
 def login():
     global ORDER_ID
+
+    ORDER_ID = None
 
     if request.method == "POST":
 
